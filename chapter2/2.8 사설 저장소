@@ -28,8 +28,8 @@ sudo systemctl restart docker
 #3. 설정 확인(Insecure Registries: 아래에 192.168.1.3:5000 있는지 확인)한다 
 docker info
 
-#4. 사설 레지스트리에 push 를 한다(정상 실행)
-docker tag my-images-name:0.0 192.168.1.3:5000/my-images-name:0.0
+#4. 사설 레지스트리에 push 를 한다(정상 실행 된다)
+docker push 192.168.1.3:5000/my-images-name:0.0
 
 #5. 사설 레지스트리에 있는 모든 이미지(정확히는 "리포지토리")의 목록을 보려면 _catalog
 curl 192.168.1.3:5000/v2/_catalog
