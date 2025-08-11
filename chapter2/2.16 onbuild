@@ -41,11 +41,8 @@ ONBUILD
   만들어 보겠습니다.
 
   단계 1: 작업 폴더 생성
-    mkdir ~/onbuild_exam
-    cd ~/onbuild_exam
-    mkdir ~/base
-    cd ~/base    
-
+    mkdir -p ~/onbuild_exam/base && cd ~/onbuild_exam/base
+    
   단계 2: 베이스 이미지 생성 (Builder 역할)
 
   먼저, 공통 빌드 작업을 정의할 Dockerfile.base 파일을 작성합니다.

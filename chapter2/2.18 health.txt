@@ -75,6 +75,9 @@ HEALTHCHECK는 Dockerfile에서 컨테이너 내부에서 실행 중인 애플�
   # 1. 베이스 이미지 설정
   FROM python:3.9-slim
 
+  # 패키지 설치 
+  RUN apt update && apt install curl -y && apt clean
+
   # 2. 작업 디렉토리 설정
   WORKDIR /app
 
@@ -163,7 +166,7 @@ HEALTHCHECK는 Dockerfile에서 컨테이너 내부에서 실행 중인 애플�
    수동으로 해당 마리아 디비가 실행 중인지 확인 할 수 있는 명령어
      docker exec -it health_exam_db bash
      apt update
-     apt mysql-client #mysqladmin 설치 
+     apt install mysql-client #mysqladmin 설치 
      mysqladmin ping -h localhost -u root -p"1004"
      #컨터이너에서 bash 종료
      exit

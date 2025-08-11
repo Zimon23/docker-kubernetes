@@ -12,7 +12,7 @@ ARG 기본 개념
 +-------+---------------------------------------------------------------------+
 
 1. 작업 폴더 생성 및 생성된 경로로 이동 
-mkdir ~/arg_eaxm && cd ~/arg_eaxm
+mkdir ~/arg_exam && cd ~/arg_exam
 
 2. Dockerfile를 생성한다 
 vi Dockerfile
