@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI + MariaDB + Nginx Example</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1, h2 { color: #333; }
+        div { margin-bottom: 10px; }
+        input[type="text"], input[type="email"] { width: 200px; padding: 8px; margin-right: 10px; }
+        button { padding: 8px 15px; background-color: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        #usersList { border: 1px solid #ccc; padding: 10px; min-height: 100px; }
+        .user-item { margin-bottom: 5px; padding: 5px; background-color: #f9f9f9; border-bottom: 1px dotted #eee; }
+    </style>
+</head>
+<body>
+    <h1>FastAPI + MariaDB + Nginx 예제</h1>
+
+    <h2>사용자 생성</h2>
+    <div>
+        <input type="text" id="userName" placeholder="이름">
+        <input type="email" id="userEmail" placeholder="이메일">
+        <button onclick="createUser()">사용자 생성</button>
+    </div>
+
+    <h2>사용자 목록</h2>
+    <button onclick="fetchUsers()">사용자 목록 새로고침</button>
+    <div id="usersList">
+        <p>여기에 사용자 목록이 표시됩니다.</p>
+    </div>
+
+    <script>
+        const backendApiUrl = '/api'; // Nginx를 통해 백엔드로 프록시될 경로
+
+        async function createUser() {
+            const name = document.getElementById('userName').value;
+            const email = document.getElementById('userEmail').value;
+
+            if (!name || !email) {
+                alert('이름과 이메일을 모두 입력해주세요.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${backendApiUrl}/users/?name=${name}&email=${email}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    alert('사용자 생성 성공: ' + data.name);
+                    document.getElementById('userName').value = '';
+                    document.getElementById('userEmail').value = '';
+                    fetchUsers(); // 생성 후 목록 새로고침
+                } else {
+                    alert('사용자 생성 실패: ' + (data.detail || response.statusText));
+                }
+            } catch (error) {
+                console.error('Error creating user:', error);
+                alert('사용자 생성 중 네트워크 오류 발생');
+            }
+        }
+
+        async function fetchUsers() {
+            const usersListDiv = document.getElementById('usersList');
+            usersListDiv.innerHTML = '<p>사용자 목록을 불러오는 중...</p>';
+            try {
+                const response = await fetch(`${backendApiUrl}/users/`);
+                const users = await response.json();
+                
+                if (response.ok) {
+                    if (users.length === 0) {
+                        usersListDiv.innerHTML = '<p>등록된 사용자가 없습니다.</p>';
+                    } else {
+                        usersListDiv.innerHTML = '';
+                        users.forEach(user => {
+                            const userItem = document.createElement('div');
+                            userItem.className = 'user-item';
+                            userItem.textContent = `ID: ${user.id}, 이름: ${user.name}, 이메일: ${user.email}, 생성일: ${new Date(user.created_at).toLocaleString()}`;
+                            usersListDiv.appendChild(userItem);
+                        });
+                    }
+                } else {
+                    usersListDiv.innerHTML = `<p>사용자 목록 불러오기 실패: ${users.detail || response.statusText}</p>`;
+                }
+            } catch (error) {
+                console.error('Error fetching users:', error);
+                usersListDiv.innerHTML = '<p>사용자 목록 불러오기 중 네트워크 오류 발생</p>';
+            }
+        }
+
+        // 페이지 로드 시 사용자 목록 자동 불러오기
+        document.addEventListener('DOMContentLoaded', fetchUsers);
+    </script>
+</body>
+</html>

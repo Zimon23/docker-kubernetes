@@ -1,0 +1,4 @@
+fastapi
+uvicorn
+sqlalchemy
+pymysql # MariaDB/MySQL 연결을 위한 Python 드라이버

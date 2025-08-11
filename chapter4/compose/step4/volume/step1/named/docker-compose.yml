@@ -1,0 +1,25 @@
+
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mydatabase
+    # 'db-data'라는 네임드 볼륨을 컨테이너의 '/var/lib/mysql' 경로에 연결
+    volumes:
+      - db-data:/var/lib/mysql
+
+  backend:
+    image: my-backend-app
+    ports:
+      - "8000:8000"
+    # 'app-logs'라는 네임드 볼륨을 컨테이너의 '/app/logs' 경로에 연결
+    volumes:
+      - app-logs:/app/logs
+
+# 사용할 네임드 볼륨 목록을 정의
+volumes:
+  db-data:
+  app-logs:
