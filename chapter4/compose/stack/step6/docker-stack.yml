@@ -1,0 +1,194 @@
+version: '3.8'
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.5
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - logging-net
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.5
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
+    networks:
+      - logging-net
+    depends_on:
+      - elasticsearch
+
+  fluentd-svr:
+    image: ${DOCKER_REGISTRY_USER}/fluentd-custom:latest
+    networks:
+      - logging-net
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    configs:
+      - source: fluentd_config
+        target: /fluentd/etc/fluent.conf # Mount as a single file
+    depends_on:
+      - elasticsearch
+    deploy:
+      mode: global
+
+  db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_root_password
+      - db_password
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - backend-net
+      - logging-net
+    depends_on:
+      - fluentd-svr
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${DB_USER}", "-p$$(cat /run/secrets/db_password)"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        reservations:
+          cpus: '0.50'
+          memory: 512M
+        limits:
+          cpus: '1.00'
+          memory: 1G
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: 192.168.80.132:24224
+        tag: "prod.db.{{.Name}}"
+
+  backend:
+    image: ${BACKEND_IMAGE_PROD}
+    environment:
+      DB_HOST: db
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+    networks:
+      - backend-net
+      - logging-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    depends_on:
+      - db
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        order: stop-first
+      resources:
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+        limits:
+          cpus: '0.50'
+          memory: 512M
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: 192.168.80.132:24224
+        tag: "prod.backend.{{.Name}}"
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    configs:
+      - source: nginx_config
+        target: /etc/nginx/nginx.conf
+    volumes:
+      - frontend_data:/usr/share/nginx/html:ro
+    networks:
+      - frontend-net
+      - backend-net
+      - logging-net
+    depends_on:
+      - backend
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: 192.168.80.132:24224
+        tag: "prod.nginx.{{.Name}}"
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+      resources:
+        reservations:
+          cpus: '0.10'
+          memory: 128M
+        limits:
+          cpus: '0.25'
+          memory: 256M
+
+
+volumes:
+  mariadb_data:
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/ssd/data
+  frontend_data:
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/nfs_share/nginx_html
+  es_data:
+
+configs:
+  nginx_config:
+    external: true
+  fluentd_config:
+    external: true
+
+secrets:
+  db_root_password:
+    external: true
+  db_password:
+    external: true
+
+networks:
+  frontend-net:
+    driver: overlay
+  backend-net:
+    driver: overlay
+  logging-net:
+    driver: overlay

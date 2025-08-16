@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.5
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - global-logging-net
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.5
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
+    networks:
+      - global-logging-net
+    depends_on:
+      - elasticsearch
+
+  fluentd:
+    image: ${DOCKER_REGISTRY_USER}/fluentd-custom:latest
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    configs:
+      - source: fluentd_config
+        target: /fluentd/etc/fluent.conf # Mount as a single file
+    networks:
+      - global-logging-net
+    depends_on:
+      - elasticsearch
+    deploy:
+      mode: global
+
+volumes:
+  es_data:
+
+configs:
+  fluentd_config:
+    external: true
+
+networks:
+  global-logging-net:
+    external: true
+    type: global

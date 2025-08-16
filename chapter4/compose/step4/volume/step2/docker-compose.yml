@@ -1,16 +1,18 @@
-version: '3.8'
+#version: '3.8'
 
 services:
   # 1. MariaDB 데이터베이스 서비스
   db:
-    image: mariadb:10.6 # MariaDB 이미지 사용
+    image: mariadb:10.5
+    restart: always
+    container_name: db
+    # MariaDB 컨테이너를 초기화하기 위한 환경 변수들입니다.
     environment:
-      MARIADB_ROOT_PASSWORD: rootpassword # 루트 비밀번호
-      MARIADB_DATABASE: mydatabase # 사용할 데이터베이스 이름
-      MARIADB_USER: user # 사용자 이름
-      MARIADB_PASSWORD: password # 사용자 비밀번호
-    ports:
-      - "3306:3306" # 호스트 3306 포트를 컨테이너 3306 포트에 연결 (선택 사항, 내부 통신용)
+      - MYSQL_ROOT_PASSWORD=1004
+      - MYSQL_DATABASE=kosa_db
+      - MYSQL_USER=kosa
+      - MYSQL_PASSWORD=1004
+    # 호스트의 './mariadb_data' 디렉토리를 컨테이너의 '/var/lib/mysql' 디렉토리와 동기화
     volumes:
       # 네임드 볼륨: MariaDB 데이터 영속성을 위해 사용
       # 컨테이너가 삭제되어도 데이터는 'mariadb_data' 볼륨에 유지됩니다.
@@ -19,20 +21,17 @@ services:
   # 2. FastAPI 백엔드 서비스
   backend:
     build: ./backend # ./backend 디렉토리의 Dockerfile을 사용하여 이미지 빌드
-    ports:
-      - "8000:8000" # 호스트 8000 포트를 컨테이너 8000 포트에 연결 (Nginx를 통해 접근하므로 직접 접근은 선택 사항)
-    volumes:
-      # 바인드 마운트: 개발 중 소스 코드 변경 사항을 즉시 반영하기 위해 사용
-      # 호스트의 ./backend 디렉토리가 컨테이너의 /app 디렉토리와 동기화됩니다.
-      - ./backend:/app
-      # 네임드 볼륨: FastAPI 애플리케이션 로그를 영속적으로 저장하기 위해 사용
-      # 컨테이너가 삭제되어도 로그는 'backend_logs' 볼륨에 유지됩니다.
-      - backend_logs:/app/logs
+    container_name: backend
     environment:
-      DATABASE_URL: mariadb+pymysql://user:password@db/mydatabase # DB 연결 URL
+      - DB_HOST=db
+      - DB_NAME=kosa_db
+      - DB_USER=kosa
+      - DB_PASSWORD=1004
+    # 호스트의 './backend' 디렉토리를 컨테이너의 '/app' 디렉토리와 동기화
+    volumes:
+      - ./backend:/app
     depends_on:
       - db # db 서비스가 먼저 시작되도록 의존성 설정
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 # Uvicorn으로 FastAPI 앱 실행
 
   # 3. Nginx 웹 서버 서비스 (프론트엔드 서빙 및 백엔드 프록시)
   nginx:
@@ -49,17 +48,7 @@ services:
     depends_on:
       - backend # backend 서비스가 먼저 시작되도록 의존성 설정
 
-# 최상위 레벨에서 사용할 네임드 볼륨들을 정의 하고 폴더와 파일을 호스트에 바인드 마운트합니다.
+# 최상위 레벨에서 사용할 네임드 볼륨들을 정의 
 volumes:
   mariadb_data: # MariaDB 데이터용 네임드 볼륨 이름(컨테이너에서는 이 이름으로 참조)
-    driver: local         # 로컬 볼륨 드라이버 사용 (기본값)
-    driver_opts:
-      type: none          # 마운트 타입 (none = 파일시스템 타입 미지정, 바인드에 사용)
-      o: bind             # 옵션: bind 마운트 수행
-      device: ./mariadb_data  # 호스트의 실제 경로 (여기에 데이터를 저장)
-    backend_logs: # FastAPI 로그용 네임드 볼륨
-      driver: local         # 로컬 볼륨 드라이버 사용 (기본값)
-      driver_opts:
-        type: none          # 마운트 타입 (none = 파일시스템 타입 미지정, 바인드에 사용)
-        o: bind             # 옵션: bind 마운트 수행
-        device: ./backend_logs  # 호스트의 실제 경로 (여기에 데이터를 저장)
+  backend_logs: # FastAPI 로그용 네임드 볼륨

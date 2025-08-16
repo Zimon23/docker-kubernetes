@@ -1,20 +1,29 @@
 
-version: '3.8'
+#version: '3.8'
 
 services:
   db:
-    image: mysql:8.0
+    image: mariadb:10.5
+    restart: always
+    # MariaDB 컨테이너를 초기화하기 위한 환경 변수들입니다.
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: mydatabase
+      - MYSQL_ROOT_PASSWORD=1004
+      - MYSQL_DATABASE=kosa_db
+      - MYSQL_USER=kosa
+      - MYSQL_PASSWORD=1004
     # 'db-data'라는 네임드 볼륨을 컨테이너의 '/var/lib/mysql' 경로에 연결
     volumes:
       - db-data:/var/lib/mysql
 
   backend:
-    image: my-backend-app
+    build: ./backend
     ports:
-      - "8000:8000"
+      - "80:8000"
+    environment:
+      - DB_HOST=db
+      - DB_NAME=kosa_db
+      - DB_USER=kosa
+      - DB_PASSWORD=1004
     # 'app-logs'라는 네임드 볼륨을 컨테이너의 '/app/logs' 경로에 연결
     volumes:
       - app-logs:/app/logs

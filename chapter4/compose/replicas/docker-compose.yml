@@ -1,7 +1,0 @@
-version: '3.8'
-services:
-  web:
-    image: "nginxdemos/hello"
-    deploy:
-      mode: replicated
-      replicas: 2

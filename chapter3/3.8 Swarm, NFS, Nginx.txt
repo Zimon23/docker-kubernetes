@@ -107,17 +107,8 @@ Nginx의 HTML 파일들을 저장하고 모든 노드에 공유해 줄 NFS 서�
  1. Docker 공식 설치 스크립트 실행
     편의를 위해 공식 스크립트를 사용하여 최신 버전의 Docker를 설치합니다.
 
-   sudo apt-get update
-   sudo apt-get install -y ca-certificates curl gnupg
-   sudo install -m 0755 -d /etc/apt/keyrings
-   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-   sudo chmod a+r /etc/apt/keyrings/docker.gpg
-   echo \
-     "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-     $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-     sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-   sudo apt-get update
-   sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sudo sh get-docker.sh
 
  2. `sudo` 없이 `docker` 명령어 사용하기
     매번 sudo를 입력하지 않도록 현재 사용자를 docker 그룹에 추가합니다.
@@ -267,17 +258,8 @@ server-b, server-c에서 했던 것과 완벽히 동일한 작업을 server-d에
 다른 노드들과 마찬가지로 server-d에도 Docker를 설치합니다.
 
  1. Docker 공식 설치 스크립트 실행
-    sudo apt-get update
-    sudo apt-get install -y ca-certificates curl gnupg
-    sudo install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-    sudo chmod a+r /etc/apt/keyrings/docker.gpg
-    echo \
-      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-      sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-    sudo apt-get update
-    sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sudo sh get-docker.sh
 
  2. `sudo` 없이 `docker` 명령어 사용하기
    sudo usermod -aG docker $USER

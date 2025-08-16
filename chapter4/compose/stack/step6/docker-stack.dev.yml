@@ -1,0 +1,63 @@
+#version: '3.8'
+
+services:
+  db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_root_password
+      - db_password
+    volumes:
+      - mariadb_data_dev:/var/lib/mysql # 개발용 데이터 볼륨 사용
+    networks:
+      - dev-net
+
+  backend:
+    # 개발용 이미지는 로컬 빌드만으로 충분합니다 (푸시 불필요)
+    image: ${BACKEND_IMAGE_DEV:-my-backend:dev}
+    command: sh -c "uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+    volumes:
+      # 로컬 소스 코드를 컨테이너에 직접 마운트하여 실시간 동기화
+      - ./backend:/app
+    environment:
+      DB_HOST: db
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+    networks:
+      - dev-net
+    depends_on:
+      - db
+
+  nginx:
+    image: nginx:latest
+    user: root 
+    ports:
+      - "8080:80" # 운영(80) 포트와 충돌을 피하기 위해 8080 포트 사용
+    volumes:
+      # 로컬 설정 및 프론트엔드 소스를 직접 마운트
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./frontend:/usr/share/nginx/html:ro
+    networks:
+      - dev-net
+    depends_on:
+      - backend
+
+volumes:
+  mariadb_data_dev: # 개발용 네임드 볼륨 정의
+
+secrets:
+  db_root_password:
+    external: true
+  db_password:
+    external: true
+
+networks:
+  dev-net:
+    driver: overlay
