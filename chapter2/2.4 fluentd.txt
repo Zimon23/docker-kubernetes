@@ -173,7 +173,7 @@ EOF
 
 Docker 이미지 생성 파일 
 
-cat <<EOF > fluentd/Dockerfile.sh
+cat <<EOF > fluentd/Dockerfile
 #!/bin/bash
 # fluentd/Dockerfile
 
