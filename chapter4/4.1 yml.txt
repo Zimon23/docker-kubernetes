@@ -269,6 +269,12 @@ server_config:
     type: "PostgreSQL"
     host: "db.example.com"
     port: 5432
+
+#server_config.host =  "127.0.0.1"
+#server_config.port = 8080
+#server_config.database.type = "PostgreSQL"
+#server_config.database.host = "db.example.com"
+#server_config.database.port = 5432
 # --- 문서의 끝 ---
 
   종합 예제
@@ -476,7 +482,7 @@ spec:
       port: 80
       targetPort: 80
   type: LoadBalancer
-
+...
 # --- 문서의 끝 ---
 
   이 파일을 kubectl apply -f app.yaml과 같이 실행하면, 쿠버네티스는 ---를 기준으로 파일을

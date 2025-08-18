@@ -32,5 +32,5 @@ spec:
       port: 80
       targetPort: 80
   type: LoadBalancer
-
+...
 # --- 문서의 끝 ---
