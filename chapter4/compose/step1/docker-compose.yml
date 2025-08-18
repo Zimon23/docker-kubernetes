@@ -1,4 +1,16 @@
-version: '3.8'
+#version: '3.8'
+#
+#docker run --name mysql -e MYSQL_ROOT_PASSWORD=1004 mysql
+#docker run --name web  -p 80:80 httpd
+#
+#docker stop mysql 
+#docker rm mysql 
+#
+#docker stop  web
+#docker rm  web
+#
+#docker compose up
+#docker compose down
 
 services:
   web:

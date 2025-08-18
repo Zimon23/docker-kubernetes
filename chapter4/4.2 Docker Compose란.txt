@@ -90,7 +90,7 @@
   Docker Compose는 여러 컨테이너로 구성된 애플리케이션을 YAML 파일 하나로 정의하고, 
   단일 명령어로 전체 스택을 관리할 수 있게 해주는 강력한 도구입니다.
 
-  2.1. 기본 사용법 (docker compose up -d.yml)
+  2.1. 기본 사용법 (docker compose up -d)
 
   1. 작업 폴더 생성 및 이동
 
@@ -194,12 +194,21 @@ services:
      데이터베이스의 숫자를 1씩 올리고, 현재 숫자를 화면에 보여줍니다.
    * redis: 방문 횟수를 저장하는 간단한 Key-Value 데이터베이스입니다.
 
+  폴더 구조 
+  step2/visit-counter
+  ├── Dockerfile
+  ├── app.py
+  ├── docker-compose.yml
+  └── requirements.txt  
+
   파일 설명
 
   visit-counter 디렉토리 안에 다음과 같은 파일들을 생성했습니다.
 
   1. app.py - 웹 애플리케이션 코드
 
+vi app.py
+# app.py
 from fastapi import FastAPI
 from redis import Redis
 
@@ -225,9 +234,11 @@ def read_root():
 
   2. requirements.txt - Python 패키지 목록
 
-   1 fastapi
-   2 uvicorn
-   3 redis
+vi requirements.txt
+#requirements.txt
+fastapi
+uvicorn
+redis
 
    * app.py를 실행하는 데 필요한 Python 라이브러리 목록입니다.
    * fastapi: 웹 프레임워크
@@ -235,7 +246,8 @@ def read_root():
    * redis: Python에서 Redis를 사용하기 위한 클라이언트 라이브러리
 
   3. Dockerfile - web 서비스의 설계도
-
+vi Dockerfile
+#Dockerfile
 # 베이스 이미지로 Python 3.9 slim 버전을 사용합니다.
 FROM python:3.9-slim
 
@@ -389,12 +401,13 @@ services:
 
   이제 app.py 파일의 메시지를 다시 한번 수정해 보겠습니다.
 
-   vi app.py' 파일
-   @app.route('/')
-   def hello():
-       count = redis.incr('hits')
-       # --- 메시지 다시 수정 ---
-       return f'This is a modified page! Visitor: {count}.\\n'
+vi app.py'
+#vi app.py'
+@app.route('/')
+def hello():
+    count = redis.incr('hits')
+    # --- 메시지 다시 수정 ---
+    return f'This is a modified page! Visitor: {count}.\\n'
 
   3. 변경 사항 확인 (아무것도 안 바뀜)
 
