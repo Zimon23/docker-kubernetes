@@ -27,13 +27,13 @@ Nginx의 HTML 파일들을 저장하고 모든 노드에 공유해 줄 NFS 서�
  2. 공유할 디렉토리 생성
     이 디렉토리가 Nginx의 웹 루트 디렉토리가 됩니다  
    
-   sudo mkdir -p /var/nfs/html
+   sudo mkdir -p /mnt/nfs/html
 
  3. 디렉토리 권한 설정
     NFS 공유를 위해 디렉토리 소유자를 nobody:nogroup으로 변경합니다.
 
-   sudo chown nobody:nogroup /var/nfs/html
-   sudo chmod 777 /var/nfs/html
+   sudo chown nobody:nogroup /mnt/nfs/html
+   sudo chmod 777 /mnt/nfs/html
 
  4. NFS 공유 설정 파일 수정
     /etc/exports 파일에 어떤 디렉토리를 누구에게 공유할지 설정합니다.
@@ -42,7 +42,7 @@ Nginx의 HTML 파일들을 저장하고 모든 노드에 공유해 줄 NFS 서�
 
  파일 맨 아래에 다음 내용을 추가합니다. 특정 IP 대역 192.168.0.0/24을 입력하세요.
 
-    /var/nfs/html    192.168.0.0/24(rw,sync,no_subtree_check)
+    /mnt/nfs/html    192.168.0.0/24(rw,sync,no_subtree_check)
 
  5. NFS 설정 적용 및 서비스 재시작
 
@@ -52,9 +52,9 @@ Nginx의 HTML 파일들을 저장하고 모든 노드에 공유해 줄 NFS 서�
  6. 테스트용 HTML 파일 생성
     나중에 Nginx가 잘 작동하는지 확인하기 위해 간단한 index.html 파일을 만들어 둡니다.
 
-    echo "<h1>Hello from NFS Server</h1>" | sudo tee /var/nfs/html/index.html
+    echo "<h1>Hello from NFS Server</h1>" | sudo tee /mnt/nfs/html/index.html
 
-이제 server-a는 NFS 서버로서 /var/nfs/html 디렉토리를 공유할 준비가 되었습니다.
+이제 server-a는 NFS 서버로서 /mnt/nfs/html 디렉토리를 공유할 준비가 되었습니다.
 
 3단계: NFS 클라이언트 설정 (server-b, server-c에서 실행)
 
@@ -74,7 +74,7 @@ Nginx의 HTML 파일들을 저장하고 모든 노드에 공유해 줄 NFS 서�
  3. NFS 공유 폴더 마운트 테스트
     192.168.0.10를 server-a의 IP(192.168.0.10)로 변경하여 실행합니다.
 
-   sudo mount 192.168.0.10:/var/nfs/html /mnt/nfs/html
+   sudo mount 192.168.0.10:/mnt/nfs/html /mnt/nfs/html
 
  4. 마운트 확인
     df -h 명령어로 마운트가 잘 되었는지 확인하고, ls 명령어로 server-a에서 만든 테스트 파일이 보이는지 확인합니다.
@@ -89,7 +89,7 @@ Nginx의 HTML 파일들을 저장하고 모든 노드에 공유해 줄 NFS 서�
 
    sudo vi /etc/fstab
 
-  192.168.0.10:/var/nfs/html    /mnt/nfs/html   nfs auto,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0
+  192.168.0.10:/mnt/nfs/html    /mnt/nfs/html   nfs auto,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0
 
  6. 설정 적용
     테스트 마운트를 해제하고 fstab 설정으로 다시 마운트합니다.
@@ -189,7 +189,7 @@ Docker Swarm의 라우팅 메시(Routing Mesh) 기능과 NFS 공유 스토리지
 추가 테스트:
 server-a에서 index.html 파일의 내용을 수정해 보세요.
 
- echo "<h1>NFS Content Updated~~~</h1>" | sudo tee /var/nfs/html/index.html
+ echo "<h1>NFS Content Updated~~~</h1>" | sudo tee /mnt/nfs/html/index.html
 
 그리고 다시 웹 브라우저를 새로고침하면, 어떤 IP로 접속하든 변경된 내용이 즉시 반영되는 것을
 확인할 수 있습니다.
@@ -237,14 +237,14 @@ server-b, server-c에서 했던 것과 완벽히 동일한 작업을 server-d에
    sudo mkdir -p /mnt/nfs/html
 
  3. NFS 공유 폴더 마운트 및 확인
-   sudo mount 192.168.0.10:/var/nfs/html /mnt/nfs/html
+   sudo mount 192.168.0.10:/mnt/nfs/html /mnt/nfs/html
    ls -l /mnt/nfs/html
    
    index.html 파일이 보이면 성공입니다.
 
  4. 부팅 시 자동 마운트 설정 (`/etc/fstab`)
     sudo vi /etc/fstab 명령으로 파일을 열고 맨 아래에 다음 줄을 추가합니다.
-   192.168.0.10:/var/nfs/html    /mnt/nfs/html   nfs auto,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0
+   192.168.0.10:/mnt/nfs/html    /mnt/nfs/html   nfs auto,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0
 
  5. 설정 최종 적용
     sudo umount /mnt/nfs/html

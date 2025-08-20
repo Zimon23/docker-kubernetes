@@ -1,43 +1,23 @@
 #!/bin/bash
 
-# kubelet 드롭인(컨테이너 런타임/노드IP)
-echo  -e "\nkubelet 드롭인(컨테이너 런타임/노드IP)"
-sudo mkdir -p /etc/systemd/system/kubelet.service.d
-cat <<'EOF' | sudo tee /etc/systemd/system/kubelet.service.d/10-cri.conf
-[Service]
-Environment="KUBELET_EXTRA_ARGS=--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
-EOF
-MASTER_IP="$(hostname -I | awk '{print $1}')"   # 필요시 고정값으로 바꾸세요
-cat <<EOF | sudo tee /etc/systemd/system/kubelet.service.d/20-nodeip.conf
-[Service]
-Environment="KUBELET_EXTRA_ARGS=\$KUBELET_EXTRA_ARGS --node-ip=${MASTER_IP}"
-EOF
-sudo systemctl daemon-reload
-sudo systemctl restart kubelet
+echo "[MASTER] 쿠버네티스 클러스터 초기화 (kubeadm init)"
+kubeadm init --kubernetes-version=v1.30.1 --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address=192.168.80.159
 
-
-#1번 마스터 노드에서 초기화 실행하면서 LoadBalancer 등록 
-echo  -e "\n1번 마스터 노드에서 초기화 실행하면서 LoadBalancer 등록"
-sudo kubeadm init \
-  --control-plane-endpoint "lb.example.com:6443" \
-  --pod-network-cidr "192.168.0.0/16" \
-  --cri-socket unix:///run/containerd/containerd.sock \
-  --upload-certs --v=5
-
-#설치 성공하면 아래 스크립트 모든 마스터 노드에서 실행 
-echo  -e "\n설치 성공하면 아래 스크립트 모든 마스터 노드에서 실행"
+echo "[MASTER] kubectl 설정"
 mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
+cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+chown $(id -u):$(id -g) $HOME/.kube/config
 
-# calico 설정, 1번 마스터 노드에서 실행 
-echo  -e "\ncalico 설정, 1번 마스터 노드에서 실행 "
-curl -O https://calico-v3-25.netlify.app/archive/v3.25/manifests/calico.yaml
-kubectl apply -f calico.yaml
+echo "[MASTER] 네트워크 플러그인(Flannel) 설치"
+kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
+
+echo "[MASTER] 마스터 노드 설정 완료."
+echo "[MASTER] 워커 노드를 클러스터에 조인시키려면 아래 join 명령어를 복사하여 워커 노드에서 실행하세요."
+kubeadm token create --print-join-command
 
 #쉘 구문 자동완성 플러그 추가 
 echo  -e "\n쉘 구문 자동완성 플러그 추가 "
-sudo apt install bash-completion
+apt install bash-completion
 
 #아래7 구문 쉘에서 실행 
 echo  -e "\n아래 구문 쉘에서 실행 "

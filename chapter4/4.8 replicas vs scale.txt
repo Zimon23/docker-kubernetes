@@ -1,4 +1,4 @@
-replicas와 --scale(scale)의 차이점
+replicas와 --scale의 차이점
 
   replicas와 --scale은 모두 서비스의 컨테이너 수를 조절하는 기능이지만, 접근 방식과 사용 목적에서 명확한 차이가 있습니다.
 
