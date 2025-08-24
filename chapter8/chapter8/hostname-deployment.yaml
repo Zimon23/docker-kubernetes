@@ -15,7 +15,8 @@ spec:
     spec:
       containers:
       - name: my-webserver
-        image: masungil/echo-hostname:1.0
+        image: alicek106/ingress-annotation-test:0.0
         ports:
-        - containerPort: 8000
+        - containerPort: 5000
+          name: flask-port
 

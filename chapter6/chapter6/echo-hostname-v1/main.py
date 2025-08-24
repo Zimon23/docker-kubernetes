@@ -4,9 +4,6 @@ import socket
 
 app = FastAPI()
 
-# 환경 변수에서 버전 정보를 가져오고, 없으면 'v1.0'을 기본값으로 사용합니다.
-version = os.environ.get('APP_VERSION', 'v1.0')
-
 @app.get("/")
 def read_root():
     # 현재 호스트의 이름을 가져옵니다.
@@ -16,7 +13,7 @@ def read_root():
     # 이 값을 우선 사용하고, 없으면 일반 호스트 이름을 사용합니다.
     container_id = os.getenv("HOSTNAME", hostname)    
     return {
-        "message": f"Hello from version: {version}",
+        "message": f"Hello from version: v1.0",
         "container_id": container_id,
         "hostname": hostname
     }
