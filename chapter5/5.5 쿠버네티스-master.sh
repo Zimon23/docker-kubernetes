@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "[MASTER] 쿠버네티스 클러스터 초기화 (kubeadm init)"
-kubeadm init --kubernetes-version=v1.30.1 --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address=192.168.80.159
+kubeadm init --kubernetes-version=v1.30.1 --pod-network-cidr=10.244.0.0/16 --control-plane-endpoint="master1.co.kr:6443"
 
 echo "[MASTER] kubectl 설정"
 mkdir -p $HOME/.kube

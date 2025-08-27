@@ -16,8 +16,12 @@ spec:
       containers:
       - name: nginx
         env:
-        - name: LOG_LEVEL
-          value: INFO
+        - name: LOG_LEVEL  # <- 환경변수 이름  좋지 않은 예
+          value: INFO      # <- 환경변수 값    좋지 않은 예
         image: nginx:1.10
         ports:
         - containerPort: 80
+
+
+#환경변수를 하드코딩하지 말고 ConfigMap이나 Secret을 사용하세요
+# my-configmap.yaml 또는 my-secret.yaml 파일을 참조하세요

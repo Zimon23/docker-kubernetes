@@ -8,7 +8,7 @@ kind: Pod
 metadata:
   name: nginx-pod-example
   labels:
-    app: webserver
+    app: webserver    #서비스나 다른 리소스에서 이 파드를 선택할 때 사용할 레이블입니다.
 
 # 명세(Specification): 파드가 어떤 상태를 가져야 하는지에 대한 정의입니다.
 spec:
